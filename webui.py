@@ -306,7 +306,7 @@ async def api_delete_connection(connection_name):
         
         return jsonify({
             "success": True,
-            "message": f"✅ 连接已删除！\n\n🚀 配置将在下次数据库操作时自动生效。"
+            "message": f"✅ 连接已删除！\n\n🚀 新配置将在下次加载配置文件时生效，请手动重载本插件。"
         })
     except Exception as e:
         logger.error(f"删除连接失败: {e}", exc_info=True)
@@ -338,7 +338,7 @@ async def api_disable_connection(connection_name):
         
         return jsonify({
             "success": True,
-            "message": f"✅ 连接已禁用！\n\n🚀 配置将在下次数据库操作时自动生效。"
+            "message": f"✅ 连接已禁用！\n\n🚀 新配置将在下次加载配置文件时生效，请手动重载本插件。"
         })
     except Exception as e:
         logger.error(f"禁用连接失败: {e}", exc_info=True)
@@ -370,7 +370,7 @@ async def api_enable_connection(connection_name):
         
         return jsonify({
             "success": True,
-            "message": f"✅ 连接已启用！\n\n🚀 配置将在下次数据库操作时自动生效。"
+            "message": f"✅ 连接已启用！\n\n🚀 新配置将在下次加载配置文件时生效，请手动重载本插件。"
         })
     except Exception as e:
         logger.error(f"启用连接失败: {e}", exc_info=True)
@@ -490,7 +490,7 @@ async def api_update_connection(connection_name):
         
         # 构建返回消息（配置会在下次查询时自动生效）
         action = "连接配置已更新" if updated else "新连接已创建"
-        message = f"✅ {action}！\n\n🚀 配置将在下次数据库操作时自动生效，无需重启插件。"
+        message = f"✅ {action}！\n\n🚀 新配置将在下次加载配置文件时生效，请手动重载本插件。"
         
         return jsonify({
             "success": True,
@@ -883,3 +883,4 @@ if __name__ == "__main__":
     }
 
     asyncio.run(start_server(test_config, "./data"))
+
