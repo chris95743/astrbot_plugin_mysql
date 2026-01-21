@@ -46,87 +46,79 @@ git clone https://github.com/Chris95743/astrbot_plugin_mysql.git
 
 ## 🚀 快速开始
 
-### 1. 配置数据库连接
+### 1. 安装并启用插件
 
-**方式1: 单个数据库（简单配置）**
+1. 在AstrBot插件市场搜索"MySQL"并安装
+2. 或手动将插件解压到 `data/plugins/astrbot_plugin_mysql/`
+3. 在AstrBot Dashboard中启用插件
+4. 插件会自动启动WebUI（默认端口6200）
 
-在AstrBot Dashboard的插件配置页面，`connections` 字段填写：
+### 2. 插件配置说明
 
-```json
-[{"name":"default","host":"localhost","port":3306,"username":"root","password":"your_password","database":"test","charset":"utf8mb4","enable_insert":true,"enable_update":true,"enable_delete":false,"enable_create_table":false,"table_whitelist":[],"table_blacklist":["mysql","information_schema","performance_schema","sys"],"max_query_rows":1000,"max_update_rows":100,"pool_size":3}]
-```
-
-**方式2: 多个数据库（高级配置）**
-
-支持配置多个数据库全局参数
-
-除了连接配置外，还有以下全局参数：
+在AstrBot Dashboard的插件配置页面，只需配置以下参数：
 
 ```json
 {
-  "default_connection": "default",     // 默认使用的连接名称
-  "query_timeout": 30.0,               // 查询超时时间（秒）
-  "webui_port": 6200,                  // WebUI端口号
-  "webui_username": "admin",           // WebUI登录用户名
-  "webui_password": "admin123",        // WebUI登录密码
-  "enable_audit_log": true,            // 启用审计日志
-  "pool_recycle": 3600,                // 连接回收时间（秒）
-  "enable_ssl": false                  // 启用SSL连接
+  "webui_enable": true,              // 是否启用WebUI管理界面
+  "webui_port": 6200,                // WebUI访问端口
+  "webui_username": "admin",         // WebUI登录用户名
+  "webui_password": "admin123",      // WebUI登录密码
+  "default_connection": "default",   // AI未指定连接时使用的默认连接名
+  "query_timeout": 30.0,             // 查询超时时间（秒）
+  "enable_audit_log": true,          // 是否启用审计日志
+  "pool_recycle": 3600,              // 连接池回收时间（秒）
+  "enable_ssl": false                // 是否启用SSL连接
 }
 ```
 
-**每个连接的权限配置**：
+> ⚠️ **重要**: 数据库连接不再通过插件配置，请通过WebUI界面管理！
 
-- `enable_insert` - 允许INSERT操作
-- `enable_update` - 允许UPDATE操作
-- `enable_delete` - 允许DELETE操作（⚠️ 建议false）
-- `enable_create_table` - 允许CREATE TABLE操作（⚠️ 建议false）
-- `table_whitelist` - 表白名单（推荐使用）
-- `table_blacklist` - 表黑名单（系统表默认已包含）
-- `max_query_rows` - 单次查询最大行数
-- `max_update_rows` - 单次更新/删除最大行数
-- `pool_size` - 该连接的连接池大小 "port": 3306,
-    "username": "readonly",
-    "password": "ReadOnly",
-    "database": "analytics_db",
-    "enable_insert": false,
-    "enable_update": false,
-    "max_query_rows": 10000,
-    "pool_size": 5
-  }
-]
+### 3. 通过WebUI管理数据库连接
+
+访问 `http://localhost:6200`，使用配置的用户名密码登录。
+
+**新建连接步骤**：
+1. 点击"新建连接"按钮
+2. 填写连接信息：
+   - **连接名称**: 自定义名称（如：main_db、analytics_db）
+   - **主机地址**: 数据库服务器地址（如：localhost、192.168.1.100）
+   - **端口**: MySQL端口（默认3306）
+   - **数据库名**: 要连接的数据库
+   - **用户名/密码**: 数据库认证信息
+   - **字符集**: 推荐utf8mb4
+   - **连接池大小**: 建议3-5
+
+3. 配置权限（重要）：
+   - ✅ **允许INSERT**: 开启后AI可插入数据
+   - ✅ **允许UPDATE**: 开启后AI可更新数据
+   - ⚠️ **允许DELETE**: 默认关闭，谨慎开启
+   - ⚠️ **允许CREATE TABLE**: 默认关闭，谨慎开启
+
+4. 设置限制：
+   - **最大查询行数**: 防止大表全表查询（推荐1000）
+   - **最大更新行数**: 防止误操作（推荐100）
+
+5. 配置表黑名单（可选）：
+   - 编辑连接时会自动加载该数据库的所有表
+   - 勾选敏感表（如密码表、系统表）加入黑名单
+   - 黑名单中的表AI无法查询
+
+6. 点击"保存配置"
+
+**配置特性**：
+- ✅ 配置实时生效，无需重启插件
+- ✅ 配置持久化保存在 `data/connections_override.json`
+- ✅ 支持启用/禁用连接（禁用的连接不占用资源）
+- ✅ 支持删除连接
+
+### 4. 开始使用
+
+配置完成后，直接在AI对话中提问即可：
+
 ```
-
-### 2. 配置权限（重要！）
-
-**基础权限**：
-- ✅ 允许 INSERT - 开启后AI可插入数据
-- ✅ 允许 UPDATE - 开启后AI可更新数据
-- ⚠️ 允许 DELETE - 默认关闭，谨慎开启
-- ⚠️ 允许 CREATE TABLE - 默认关闭
-
-**表访问控制**（二选一）：
-```yaml
-# 方式1: 白名单模式（推荐）
-表白名单: ["users", "orders", "products"]
-# 只允许操作这些表
-
-# 方式2: 黑名单模式
-表黑名单: ["mysql", "sys", "information_schema"]
-# 禁止操作这些表（系统表默认已加入）
+👤 用户: 查询users表的所有数据
+🤖 AI: [自动调用mysql_query工具查询数据并返回结果]
 ```
-
-**安全限制**：
-```yaml
-单次查询最大行数: 1000      # 防止大表全表查询
-单次更新最大行数: 100       # 防止误操作影响过多数据
-查询超时时间: 30秒          # 超时自动终止
-```
-
-### 3. 启用插件
-1. 在AstrBot Dashboard中启用插件
-2. AI对话中使用命令: `/mysql 开启后台`
-3. 浏览器访问WebUI: `http://localhost:6200`（默认账号密码: admin/admin123）
 
 ---
 
@@ -185,39 +177,68 @@ users表结构:
 
 ---
 
-## 🖥️ WebUI功能
+## 🖥️ WebUI功能详解
 
-访问 `http://localhost:6200`（可在配置中修改端口）
+访问 `http://localhost:6200`（端口可在插件配置中修改）
 
-### 1. 连接状态监控
-- 实时连接状态（✅ 已连接 / ❌ 断开）
-- 连接池使用率（3/5 活跃）
-- 今日查询统计
-- 平均响应时间
+### 1. 首页概览
+- 📊 数据库连接数统计
+- 🔗 默认连接名称显示
+- 📝 审计日志启用状态
+- 🗂️ 连接列表卡片展示
+  - 显示连接状态（✅ 已启用 / ⏸️ 已禁用）
+  - 显示主机、端口、数据库名、用户名
+  - 显示权限配置（INSERT/UPDATE/DELETE/CREATE）
+  - 点击卡片进入编辑模式
 
-### 2. 查询历史
-- 查看所有AI执行的SQL语句
-- 时间范围/用户/操作类型筛选
-- SQL语句详情查看
-- 导出为CSV/JSON
+### 2. 连接管理
+**新建连接**：
+- 点击"新建连接"按钮
+- 填写连接基本信息（名称、主机、端口、数据库、用户名、密码）
+- 配置字符集和连接池大小
+- 设置权限开关
+- 设置查询和更新行数限制
+- 保存后立即生效
 
-### 3. 权限配置
-- 可视化表白名单/黑名单管理
-- 操作权限开关（INSERT/UPDATE/DELETE/CREATE）
-- 限制参数调整（行数、超时时间）
-- 实时生效（无需重启）
+**编辑连接**：
+- 点击连接卡片进入编辑
+- 连接名称不可修改（如需更改请新建）
+- 修改配置后点击"保存配置"
+- 支持以下操作：
+  - 💾 **保存配置**: 更新连接参数
+  - 🚫 **禁用连接**: 暂时禁用（不删除配置）
+  - ✅ **启用连接**: 重新启用已禁用的连接
+  - 🗑️ **删除连接**: 永久删除连接配置
 
-### 4. 审计日志
-- 时间线展示所有操作
-- 成功/失败状态
-- 执行耗时和影响行数
-- 错误信息追踪
+**表黑名单设置**：
+- 编辑连接时自动加载数据库所有表
+- 通过复选框选择需要保护的敏感表
+- 支持全选/取消全选
+- 黑名单中的表AI无法查询
+- 适用场景：密码表、敏感配置表、系统表
 
-### 5. 数据库浏览器
-- 表列表和行数统计
-- 表结构查看（字段、类型、索引）
-- 数据预览（前100行）
-- DDL导出
+### 3. 浏览表
+- 选择数据库连接后显示所有表
+- 优雅的卡片式布局
+- 每个表提供两个操作：
+  - 📋 **查看结构**: 显示字段名、类型、键信息、额外属性
+  - 👁️ **查看数据**: 预览表中数据（限制50行）
+
+### 4. 查询测试
+- SQL在线编辑器
+- 选择目标数据库连接
+- 执行任意SQL语句（受权限限制）
+- 结果以表格形式展示
+- 显示查询耗时和影响行数
+
+### 5. 审计日志
+- 时间线展示所有数据库操作
+- 显示时间戳、用户、平台来源
+- SQL语句高亮显示
+- 成功/失败状态标识
+- 执行耗时统计
+- 错误信息详情
+- 🗑️ **一键清空日志**: 清理所有历史记录并释放空间
 
 ---
 
@@ -228,56 +249,84 @@ users表结构:
 - ✅ 拒绝字符串拼接SQL
 - ✅ 输入验证和转义
 
-### 2. 危险操作拦截
-自动拦截以下关键词：
-- `DROP DATABASE` / `DROP TABLE`
-- `TRUNCATE`
-- `FLUSH` / `GRANT` / `REVOKE`
-- SQL注释符 `--`
-- 多语句注入 `;`
+### 2. 危文件说明
 
-### 3. 权限分层控制
-```
-请求 → 操作类型检查 → 表黑名单检查 → 表白名单检查 
-    → SQL危险词检查 → 行数限制 → 执行（带超时）
-    → 审计日志记录 → 返回结果
-```
+### 插件配置（在AstrBot Dashboard中配置）
 
-### 4. 审计日志
-所有操作自动记录到SQLite数据库：
-- 时间戳、用户ID、平台来源
-- 完整SQL语句和参数
-- 影响行数、执行耗时
-- 成功/失败状态、错误信息
-
-### 5. WebUI密码安全
-- MD5 16位小写哈希存储（取32位MD5的中间16位）
-- Session Token验证
-- Cookie过期管理
-
----
-
-## ⚙️ 配置参考
-
-### 最小配置（开发环境）
 ```json
 {
-  "db_host": "localhost",
-  "db_port": 3306,
-  "db_username": "root",
-  "db_password": "123456",
-  "db_database": "test",
+  "webui_enable": true,              // 启用/禁用WebUI（关闭后完全禁用管理界面）
+  "webui_port": 6200,                // WebUI访问端口
+  "webui_username": "admin",         // 登录用户名
+  "webui_password": "admin123",      // 登录密码（MD5 16位小写存储）
+  "default_connection": "default",   // 默认连接名称
+  "query_timeout": 30.0,             // 查询超时（秒）
+  "enable_audit_log": true,          // 启用审计日志
+  "pool_recycle": 3600,              // 连接池回收时间（秒）
+  "enable_ssl": false                // 启用SSL连接
+}
+```
+
+### 连接配置（通过WebUI管理）
+
+连接配置保存在 `data/plugins/astrbot_plugin_mysql/data/connections_override.json`
+
+每个连接的结构：
+```json
+{
+  "name": "main_db",                 // 连接名称（唯一标识）
+  "host": "localhost",               // 数据库主机
+  "port": 3306,                      // 数据库端口
+  "database": "myapp",               // 数据库名
+  "username": "root",                // 用户名
+  "password": "password",            // 密码
+  "charset": "utf8mb4",              // 字符集
+  "pool_size": 3,                    // 连接池大小
+  "enabled": true,                   // 是否启用此连接
+  
+  "enable_insert": true,             // 允许INSERT操作
+  "enable_update": true,             // 允许UPDATE操作  
+  "enable_delete": false,            // 允许DELETE操作（危险）
+  "enable_create_table": false,      // 允许CREATE TABLE操作（危险）
+  
+  "max_query_rows": 1000,            // 单次查询最大行数
+  "max_update_rows": 100,            // 单次更新/删除最大行数
+  
+  "table_blacklist": [               // 表黑名单（AI无法访问）
+    "sys_user_password",
+    "sys_config",
+    "mysql",
+    "information_schema"
+  ]
+}
+```
+
+### 生产环境推荐配置
+
+**只读分析库**：
+```json
+{
+  "name": "analytics_readonly",
+  "enable_insert": false,
+  "enable_update": false,
+  "enable_delete": false,
+  "enable_create_table": false,
+  "max_query_rows": 5000,
+  "table_blacklist": ["mysql", "sys", "information_schema", "performance_schema"]
+}
+```
+
+**应用主库**：
+```json
+{
+  "name": "app_main",
   "enable_insert": true,
   "enable_update": true,
-  "enable_delete": false
-}
-```0: 如何配置多个数据库连接？
-**A**: 参见 [CONNECTIONS_CONFIG.md](CONNECTIONS_CONFIG.md) 详细文档。简单来说，`connections` 字段填写JSON数组，每个元素是一个连接配置。AI可以通过连接名称选择目标数据库。
-
-### Q1: 插件启动失败，提示"连接数据库失败"
-**A**: 检查以下几点：
-1. MySQL服务是否正在运行
-2. JSON配置格式是否正确（可用在线JSON验证工具检查）
+  "enable_delete": false,
+  "enable_create_table": false,
+  "max_query_rows": 1000,
+  "max_update_rows": 50,
+  "table_blacklist": ["sys_user_password", "sys_token", "sys_secret"]JSON验证工具检查）
 3. 数据库地址、端口、用户名、密码是否正确
 4. 数据库用户是否有相应权限
 5 "db_host": "192.168.1.100",
@@ -286,51 +335,76 @@ users表结构:
   "db_password": "ComplexP@ssw0rd",
   "db_database": "production_db",
   "db_charset": "utf8mb4",
-  
-  "enable_insert": true,
-  "enable_update": true,
-  "enable_delete": false,
-  "enable_create_table": false,
-  
-  "table_whitelist": ["users", "orders", "products", "logs"],
-  "table_blacklist": ["mysql", "sys", "information_schema", "performance_schema"],
-  
-  "max_query_rows": 500,
-  "max_update_rows": 50,
-  "query_timeout": 20.0,
-  
-  "webui_port": 6200,
-  "webui_username": "admin",
-  "webui_password": "YourStrongPassword",
-  "enable_audit_log": true,
-  
-  "pool_size": 3,
-  "pool_recycle": 1800,
-  "enable_ssl": true
-}
-```
-
----
-
-## 📋 常见问题
-
-### Q1: 插件启动失败，提示"连接数据库失败"
-**A**: 检查以下几点：
-1. MySQL服务是否正在运行
-2. 数据库地址、端口、用户名、密码是否正确
-3. 数据库用户是否有相应权限
-4. 防火墙是否阻止了连接
-
-### Q2: AI无法执行DELETE操作
-**A**: DELETE操作默认禁用，需在配置中将 `enable_delete` 改为 `true`
-
-### Q3: 查询返回的数据不完整
-**A**: 可能触发了行数限制，增大 `max_query_rows` 配置（默认1000行）
-
-### Q4: WebUI无法访问
+  如何配置第一个数据库连接？
 **A**: 
-1. 确认已执行 `/mysql 开启后台` 命令
-2. 检查端口是否被占用（默认6200）
+1. 启用插件后访问 http://localhost:6200
+2. 使用默认账号密码登录（admin/admin123）
+3. 点击"新建连接"按钮
+4. 填写数据库信息并保存
+5. 在插件配置中将 `default_connection` 设置为该连接名称
+
+### Q2: 修改连接配置后需要重启吗？
+**A**: 不需要！插件支持配置热更新，修改后下次查询时会自动重载新配置。
+
+### Q3: AI无法执行DELETE操作
+**A**: DELETE操作默认禁用。在WebUI中编辑连接，勾选"允许DELETE"权限即可。
+
+### Q4: 如何保护敏感表不被AI查询？
+**A**: 
+1. 在WebUI中编辑连接
+2. 滚动到"表黑名单"区域
+3. 勾选需要保护的表（如密码表、配置表）
+4. 保存配置
+
+### Q5: 查询返回的数据不完整
+**A**: 可能触发了行数限制。在WebUI中编辑连接，增大"最大查询行数"参数。
+
+### Q6: WebUI无法访问
+**A**: 
+1. 检查插件是否已启用
+2. 检查 `webui_enable` 配置是否为 `true`
+3. 检查端口是否被占用（默认6200）
+4. 尝试访问 `http://127.0.0.1:6200`
+
+### Q7: 如何修改WebUI密码？
+**A**: 在插件配置中修改 `webui_password`，然后重启插件。
+
+### Q8: 如何禁用某个连接但不删除配置？
+**A**: 在WebUI中编辑连接，点击"禁用连接"按钮。禁用的连接不会创建连接池，不占用资源。
+✅ 6个LLM工具（查询、插入、更新、删除、建表、查看结构）
+- ✅ 多数据库连接管理
+- ✅ 异步连接池管理
+- ✅ 细粒度权限控制
+- ✅ 表黑名单机制
+- ✅ 现代化WebUI管理界面
+- ✅ 审计日志（支持一键清理）
+- ✅ 配置热更新（无需重启）
+- ✅ 连接状态管理（启用/禁用）
+- ✅ 表浏览器（查看结构/数据）
+- ✅ 在线查询测试
+
+### v1.1.0（计划中）
+- [ ] 事务支持（BEGIN/COMMIT/ROLLBACK）
+- [ ] 慢查询分析和优化建议
+- [ ] 查询结果缓存（Redis）
+- [ ] 数据可视化图表
+- [ ] SQL语句历史记录
+- [ ] 批量导入/导出（CSV/Excel）
+
+### v1.2.0（未来）
+- [ ] 敏感字段自动脱敏
+- [ ] SQL执行计划分析
+- [ ] 索引优化建议
+- [ ] 数据库备份/恢复
+- [ ] 定时任务调度
+- [ ] Webhook通知
+
+### v2.0.0（长期目标）
+- [ ] PostgreSQL/SQLite/MongoDB支持
+- [ ] RBAC权限系统
+- [ ] 监控告警系统
+- [ ] 分布式部署支持
+- [ ] API接口开放默认6200）
 3. 尝试访问 `http://127.0.0.1:6200`
 
 ### Q5: 如何修改WebUI密码
@@ -354,22 +428,37 @@ users表结构:
 - 连接池管理
 - 权限控制系统
 - WebUI管理界面
-- 审计日志
+### 生产环境使用建议
 
-### v1.1.0（计划中）
-- [ ] 事务支持（BEGIN/COMMIT/ROLLBACK）
-- [ ] 多数据库连接
-- [ ] 慢查询分析和优化建议
-- [ ] 查询结果缓存（Redis）
-- [ ] 数据可视化图表（Echarts）
+1. **数据库用户权限**：
+   - 创建专门的数据库用户，不要使用root
+   - 只读场景使用SELECT权限
+   - 应用场景按需授予INSERT/UPDATE权限
+   - 绝不授予DROP/TRUNCATE/ALTER权限
 
-### v1.2.0（未来）
-- [ ] 敏感字段自动脱敏
-- [ ] SQL执行计划分析
-- [ ] 索引优化建议
-- [ ] 数据导出（Excel/CSV）
+2. **连接配置安全**：
+   - 修改默认WebUI密码（强密码）
+   - 设置表黑名单保护敏感表（密码表、配置表等）
+   - DELETE和CREATE TABLE操作保持禁用
+   - 合理设置查询和更新行数限制
 
-### v2.0.0（长期目标）
+3. **性能优化**：
+   - 为常用查询字段创建索引
+   - 避免让AI执行大表全表扫描
+   - 连接池大小设置为3-5（按实际并发调整）
+   - 查询超时时间设置为30秒以内
+
+4. **安全防护**：
+   - WebUI仅在内网访问，不要暴露到公网
+   - 启用审计日志，定期检查异常操作
+   - 使用表黑名单保护系统表和敏感表
+   - 定期备份 `connections_override.json` 和 `audit_logs.db`
+
+5. **监控和维护**：
+   - 定期查看审计日志，发现异常操作
+   - 使用"一键清理"功能定期清理旧日志释放空间
+   - 禁用不使用的连接节省资源
+   - 测试环境和生产环境使用不同的连接配置）
 - [ ] PostgreSQL/SQLite支持
 - [ ] RBAC权限系统
 - [ ] 监控告警
@@ -423,14 +512,6 @@ users表结构:
 - **GitHub**: [@Chris95743](https://github.com/Chris95743)
 - **仓库**: [astrbot_plugin_mysql](https://github.com/Chris95743/astrbot_plugin_mysql)
 - **问题反馈**: [GitHub Issues](https://github.com/Chris95743/astrbot_plugin_mysql/issues)
-
----
-
-## 🙏 致谢
-
-- [AstrBot](https://github.com/Soulter/AstrBot) - 强大的多平台聊天机器人框架
-- [aiomysql](https://github.com/aio-libs/aiomysql) - 优秀的MySQL异步驱动
-- [Quart](https://github.com/pallets/quart) - 异步Web框架
 
 ---
 
