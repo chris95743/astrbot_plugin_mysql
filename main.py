@@ -9,6 +9,7 @@ from pathlib import Path
 from astrbot.api import llm_tool, logger
 from astrbot.api.event import AstrMessageEvent, filter
 from astrbot.api.star import Context, Star
+from astrbot.core.message.message_event_result import MessageChain
 
 from .backend.connection_pool import ConnectionPoolManager
 from .backend.permission_manager import PermissionManager
@@ -419,6 +420,7 @@ class Main(Star):
 
     # ==================== 命令 ====================
 
+    @filter.permission_type(filter.PermissionType.ADMIN)
     @filter.command_group("mysql")
     def mysql_group(self):
         """MySQL管理命令组"""
@@ -435,7 +437,7 @@ class Main(Star):
             is_default = " (默认)" if name == default else ""
             msg += f"• {name}{is_default}\n"
 
-        await event.send(msg)
+        await event.send(MessageChain().message(msg))
 
     @mysql_group.command("状态")
     async def show_status(self, event: AstrMessageEvent):
@@ -448,7 +450,7 @@ class Main(Star):
             msg += f"  活跃: {info['active']}/{info['maxsize']}\n"
             msg += f"  空闲: {info['free']}\n\n"
 
-        await event.send(msg)
+        await event.send(MessageChain().message(msg))
 
     @mysql_group.command("测试连接")
     async def test_connection(self, event: AstrMessageEvent, name: str = None):
@@ -468,7 +470,7 @@ class Main(Star):
             icon = "✅" if success else "❌"
             msg += f"{icon} {conn_name}: {message}\n"
 
-        await event.send(msg)
+        await event.send(MessageChain().message(msg))
 
     @mysql_group.command("开启后台")
     async def start_webui(self, event: AstrMessageEvent):
