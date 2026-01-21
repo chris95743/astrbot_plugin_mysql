@@ -1,0 +1,71 @@
+{
+  "webui_enable": {
+    "description": "启用WebUI管理界面",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后将完全禁用Web管理界面"
+  },
+  "webui_port": {
+    "description": "WebUI 端口号",
+    "type": "int",
+    "default": 6200,
+    "hint": "管理界面访问端口",
+    "slider": {
+      "min": 1024,
+      "max": 65535,
+      "step": 1
+    }
+  },
+  "default_connection": {
+    "description": "默认连接名称",
+    "type": "string",
+    "hint": "AI未指定连接时使用此连接（通过WebUI配置连接后填写连接名称）",
+    "default": "default"
+  },
+  "query_timeout": {
+    "description": "查询超时时间(秒)",
+    "type": "float",
+    "default": 30.0,
+    "hint": "超过此时间将终止查询",
+    "slider": {
+      "min": 5.0,
+      "max": 300.0,
+      "step": 5.0
+    }
+  },
+  "webui_username": {
+    "description": "WebUI 登录用户名",
+    "type": "string",
+    "default": "admin",
+    "hint": "管理界面登录账号"
+  },
+  "webui_password": {
+    "description": "WebUI 登录密码",
+    "type": "string",
+    "default": "admin123",
+    "hint": "使用MD5 16位小写存储"
+  },
+  "enable_audit_log": {
+    "description": "启用审计日志",
+    "type": "bool",
+    "default": true,
+    "hint": "记录所有数据库操作到日志文件"
+  },
+  "pool_recycle": {
+    "description": "连接回收时间(秒)",
+    "type": "int",
+    "default": 3600,
+    "hint": "防止长时间连接被服务器断开",
+    "slider": {
+      "min": 300,
+      "max": 7200,
+      "step": 300
+    }
+  },
+  "enable_ssl": {
+    "description": "启用SSL连接",
+    "type": "bool",
+    "default": false,
+    "hint": "连接生产环境数据库建议开启"
+  }
+}

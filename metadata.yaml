@@ -1,0 +1,28 @@
+name: astrbot_plugin_mysql
+desc: AI驱动的MySQL数据库管理插件,支持安全的增删改查操作和WebUI管理界面
+help: |
+  提供6个LLM函数工具，让AI通过自然语言操作MySQL数据库
+  - mysql_query: 查询数据（自动限制行数）
+  - mysql_insert: 插入数据（参数化查询防注入）
+  - mysql_update: 更新数据（强制WHERE条件）
+  - mysql_delete: 删除数据（默认禁用，需手动开启）
+  - mysql_create_table: 创建表（默认禁用）
+  - mysql_show_schema: 查看表结构
+  
+  安全特性:
+  - 多层权限控制（表白名单/黑名单、操作类型开关）
+  - SQL注入防护（强制参数化查询）
+  - 危险操作拦截（DROP/TRUNCATE等）
+  - 完整审计日志（记录所有操作）
+  
+  WebUI管理界面（默认端口6200）:
+  - 连接状态监控
+  - 查询历史查看
+  - 权限可视化配置
+  - 审计日志分析
+  - 数据库浏览器
+  
+  使用命令: /mysql 开启后台
+version: v1.0.0
+author: Chris
+repo: https://github.com/Chris95743/astrbot_plugin_mysql

@@ -1,0 +1,15 @@
+# MySQL异步驱动
+aiomysql>=0.2.0
+
+# 加密库（用于SSL连接，可选）
+cryptography>=41.0.0
+
+# WebUI框架
+quart>=0.19.0
+hypercorn>=0.16.0
+
+# Jinja2模板引擎（Quart依赖）
+jinja2>=3.1.0
+
+# 日期时间处理
+python-dateutil>=2.8.0
