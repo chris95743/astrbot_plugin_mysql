@@ -326,7 +326,10 @@ users表结构:
   "enable_create_table": false,
   "max_query_rows": 1000,
   "max_update_rows": 50,
-  "table_blacklist": ["sys_user_password", "sys_token", "sys_secret"]JSON验证工具检查）
+  "table_blacklist": ["sys_user_password", "sys_token", "sys_secret"]
+}
+```
+
 3. 数据库地址、端口、用户名、密码是否正确
 4. 数据库用户是否有相应权限
 5 "db_host": "192.168.1.100",
@@ -522,4 +525,5 @@ users表结构:
 Made with ❤️ by Chris
 
 </div>
+
 
