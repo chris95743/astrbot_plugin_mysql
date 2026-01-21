@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MySQL管理面板</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #e0e0e0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        h1 {
+            font-size: 24px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-primary:hover { background-color: #357abd; }
+        .btn-secondary { background-color: var(--secondary-color); color: white; }
+        .btn-secondary:hover { background-color: #5a6268; }
+        .btn-danger { background-color: var(--danger-color); color: white; }
+        .btn-danger:hover { background-color: #c82333; }
+        .btn-warning { background-color: #ffc107; color: #212529; }
+        .btn-warning:hover { background-color: #e0a800; }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            background: #eee;
+            padding: 5px;
+            border-radius: 8px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-weight: 600;
+            border-radius: 6px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: #666;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: var(--primary-color);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Overview Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .stat-card i {
+            font-size: 30px;
+            color: var(--primary-color);
+            opacity: 0.8;
+        }
+
+        .stat-info .label { font-size: 13px; color: #888; text-transform: uppercase; }
+        .stat-info .value { font-size: 20px; font-weight: bold; }
+
+        /* Connections */
+        .connections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .conn-card {
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .conn-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: var(--primary-color);
+        }
+
+        .conn-card h3 { margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .conn-card p { font-size: 14px; margin-bottom: 5px; color: #555; }
+        .permission-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .badge-ok { background: #e6f4ea; color: #1e7e34; }
+        .badge-no { background: #fce8e6; color: #d93025; }
+
+        /* Forms */
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
+        select, textarea, input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            background: #fafafa;
+        }
+        textarea { min-height: 120px; font-family: monospace; }
+
+        /* Tables */
+        .table-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .table-card-wrapper {
+            background: #fff;
+            border: 2px solid #e3e8ef;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .table-card-wrapper:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            border-color: #667eea;
+        }
+        .table-card-header {
+            padding: 20px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #f0f2f5;
+        }
+        .table-card-header i {
+            font-size: 32px;
+            margin-bottom: 10px;
+            display: block;
+            color: #667eea;
+        }
+        .table-card-actions {
+            display: flex;
+            background: #f8f9fa;
+        }
+        .btn-table-action {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #495057;
+            padding: 12px 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-table-action:hover {
+            background: #667eea;
+            color: white;
+        }
+        .btn-table-action:not(:last-child) {
+            border-right: 1px solid #dee2e6;
+        }
+        .btn-table-action i {
+            font-size: 14px;
+        }
+
+        /* Search/Result Table */
+        .table-wrapper { overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { padding: 12px; border: 1px solid var(--border-color); text-align: left; }
+        th { background: #f8f9fa; font-weight: 600; }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active { display: flex; }
+        .modal-body {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow: auto;
+            position: relative;
+            min-width: 600px;
+        }
+        .close-modal { position: absolute; right: 20px; top: 15px; font-size: 24px; cursor: pointer; color: #888; }
+
+        /* Connection Edit Form */
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        .permission-controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .permission-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .permission-control:hover {
+            background: #e9ecef;
+        }
+        .permission-control input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Audit Logs */
+        .log-item {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            position: relative;
+        }
+        .log-item:last-child { border-bottom: none; }
+        .log-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px; color: #777; }
+        .log-sql { background: #272822; color: #f8f8f2; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 13px; overflow-x: auto; margin:10px 0;}
+        .log-status { font-weight: bold; }
+        .status-success { color: var(--success-color); }
+        .status-failure { color: var(--danger-color); }
+
+        .loading { text-align: center; padding: 40px; color: #888; }
+        pre { white-space: pre-wrap; word-break: break-all; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1><i class="fas fa-database"></i> MySQL管理面板</h1>
+        <a href="/logout" class="btn btn-secondary"><i class="fas fa-sign-out-alt"></i> 退出登录</a>
+    </header>
+
+    <nav class="tabs">
+        <button class="tab-btn active" onclick="switchTab('overview')"><i class="fas fa-home"></i> 概览</button>
+        <button class="tab-btn" onclick="switchTab('tables')"><i class="fas fa-th-list"></i> 浏览表</button>
+        <button class="tab-btn" onclick="switchTab('query')"><i class="fas fa-terminal"></i> 查询测试</button>
+        <button class="tab-btn" onclick="switchTab('audit')"><i class="fas fa-history"></i> 审计日志</button>
+    </nav>
+
+    <!-- Overview -->
+    <section id="overview" class="tab-content active">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <i class="fas fa-plug"></i>
+                <div class="stat-info">
+                    <div class="label">数据库连接数</div>
+                    <div class="value" id="stat-conn-count">...</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-star"></i>
+                <div class="stat-info">
+                    <div class="label">默认连接</div>
+                    <div class="value" id="stat-default-conn">...</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-shield-alt"></i>
+                <div class="stat-info">
+                    <div class="label">审计日志</div>
+                    <div class="value" id="stat-audit">...</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2><i class="fas fa-network-wired"></i> 连接列表</h2>
+            <button class="btn btn-primary" onclick="createNewConnection()"><i class="fas fa-plus"></i> 新建连接</button>
+        </div>
+        <div id="connections-list" class="connections-grid">
+            <div class="loading">正在加载连接信息...</div>
+        </div>
+    </section>
+
+    <!-- Tables -->
+    <section id="tables" class="tab-content">
+        <div class="form-group">
+            <label>选择数据库连接</label>
+            <select id="tables-conn-select" onchange="fetchTables()"></select>
+        </div>
+        <div id="tables-display">
+            <div class="loading">请选择上方连接以浏览数据表</div>
+        </div>
+    </section>
+
+    <!-- Query -->
+    <section id="query" class="tab-content">
+        <div class="form-group">
+            <label>选择数据库连接</label>
+            <select id="query-conn-select"></select>
+        </div>
+        <div class="form-group">
+            <label>SQL 语句</label>
+            <textarea id="query-sql" placeholder="SELECT * FROM your_table LIMIT 10;"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="runQuery()"><i class="fas fa-play"></i> 执行 SQL</button>
+        
+        <div id="query-result-area" style="margin-top: 30px;"></div>
+    </section>
+
+    <!-- Audit -->
+    <section id="audit" class="tab-content">
+        <div class="form-group" style="display: flex; align-items: center; gap: 15px;">
+            <label style="margin: 0;">显示数量</label>
+            <select id="audit-limit" style="width: auto;" onchange="fetchAuditLogs()">
+                <option value="20">20 条</option>
+                <option value="50" selected>50 条</option>
+                <option value="100">100 条</option>
+            </select>
+            <button class="btn btn-secondary" onclick="fetchAuditLogs()"><i class="fas fa-sync"></i> 刷新</button>
+            <div style="flex: 1;"></div>
+            <button class="btn btn-danger" onclick="clearAuditLogs()" title="清空所有审计日志">
+                <i class="fas fa-trash-alt"></i> 清空日志
+            </button>
+        </div>
+        <div id="audit-list" style="background: #fff; border: 1px solid var(--border-color); border-radius: 8px;">
+            <div class="loading">点击刷新加载审计日志</div>
+        </div>
+    </section>
+</div>
+
+<!-- Modal -->
+<div id="modal" class="modal" onclick="if(event.target==this) closeModal()">
+    <div class="modal-body">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <div id="modal-content"></div>
+    </div>
+</div>
+
+<!-- Connection Edit Modal -->
+<div id="edit-modal" class="modal" onclick="if(event.target==this) closeEditModal()">
+    <div class="modal-body">
+        <span class="close-modal" onclick="closeEditModal()">&times;</span>
+        <h2><i class="fas fa-edit"></i> 编辑连接配置</h2>
+        <form id="connection-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>连接名称</label>
+                    <input type="text" id="conn-name" required readonly style="background: #f0f0f0; cursor: not-allowed;">
+                    <small style="color: #666;">连接名称不可修改，如需更改请新建连接</small>
+                </div>
+                <div class="form-group">
+                    <label>主机地址</label>
+                    <input type="text" id="conn-host" placeholder="localhost" required>
+                </div>
+                <div class="form-group">
+                    <label>端口</label>
+                    <input type="number" id="conn-port" value="3306" min="1" max="65535" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>数据库名</label>
+                    <input type="text" id="conn-database" required>
+                </div>
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="conn-username" required>
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="conn-password" placeholder="留空保持不变">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>字符集</label>
+                    <select id="conn-charset">
+                        <option value="utf8mb4">utf8mb4</option>
+                        <option value="utf8">utf8</option>
+                        <option value="latin1">latin1</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>连接池大小</label>
+                    <input type="number" id="conn-pool-size" value="3" min="1" max="20">
+                </div>
+            </div>
+
+            <h3 style="margin-top: 25px; margin-bottom: 15px;">权限设置</h3>
+            <div class="permission-controls">
+                <label class="permission-control">
+                    <input type="checkbox" id="perm-insert">
+                    <i class="fas fa-plus"></i>
+                    <span>允许 INSERT（插入）</span>
+                </label>
+                <label class="permission-control">
+                    <input type="checkbox" id="perm-update">
+                    <i class="fas fa-edit"></i>
+                    <span>允许 UPDATE（更新）</span>
+                </label>
+                <label class="permission-control">
+                    <input type="checkbox" id="perm-delete">
+                    <i class="fas fa-trash"></i>
+                    <span>允许 DELETE（删除）</span>
+                </label>
+                <label class="permission-control">
+                    <input type="checkbox" id="perm-create">
+                    <i class="fas fa-table"></i>
+                    <span>允许 CREATE TABLE（建表）</span>
+                </label>
+            </div>
+
+            <h3 style="margin-top: 25px; margin-bottom: 15px;">限制设置</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>最大查询行数</label>
+                    <input type="number" id="conn-max-query" value="1000" min="1">
+                </div>
+                <div class="form-group">
+                    <label>最大更新行数</label>
+                    <input type="number" id="conn-max-update" value="100" min="1">
+                </div>
+            </div>
+
+            <h3 style="margin-top: 25px; margin-bottom: 15px;">
+                <i class="fas fa-ban"></i> 表黑名单
+                <small style="font-weight: normal; color: #666; font-size: 13px;">(选中的表将禁止AI查询，保护敏感数据)</small>
+            </h3>
+            <div id="blacklist-container" style="margin-bottom: 20px;">
+                <div id="blacklist-loading" style="text-align: center; padding: 20px; color: #666;">
+                    <i class="fas fa-spinner fa-spin"></i> 正在加载表列表...
+                </div>
+                <div id="blacklist-tables" style="display: none; max-height: 250px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px; padding: 15px; background: #fafafa;">
+                    <!-- 表列表将通过JS动态生成 -->
+                </div>
+                <div id="blacklist-error" style="display: none; color: #d93025; padding: 10px; background: #fce8e6; border-radius: 4px;">
+                    <i class="fas fa-exclamation-triangle"></i> <span id="blacklist-error-msg"></span>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn btn-danger" onclick="deleteConnection()" id="btn-delete">
+                        <i class="fas fa-trash"></i> 删除连接
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="disableConnection()" id="btn-disable">
+                        <i class="fas fa-ban"></i> 禁用连接
+                    </button>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveConnection()">
+                        <i class="fas fa-save"></i> 保存配置
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        document.querySelector(`.tab-btn[onclick*='${tabId}']`).classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+
+        if (tabId === 'tables' || tabId === 'query') updateConnSelects();
+        if (tabId === 'audit') fetchAuditLogs();
+    }
+
+    async function fetchData(url, options = {}) {
+        try {
+            // 确保每个请求都携带 credentials (session cookie)
+            const defaultOptions = {
+                credentials: 'same-origin',
+                ...options
+            };
+            const response = await fetch(url, defaultOptions);
+            if (!response.ok) {
+                // 401 表示未登录，重定向到登录页
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    throw new Error('未登录，正在跳转...');
+                }
+                throw new Error('网络请求失败');
+            }
+            return await response.json();
+        } catch (e) {
+            console.error(e);
+            return { success: false, error: e.message };
+        }
+    }
+
+    async function fetchOverview() {
+        const data = await fetchData('/api/status');
+        document.getElementById('stat-conn-count').textContent = data.connections || 0;
+        document.getElementById('stat-default-conn').textContent = data.default_connection || '未设置';
+        document.getElementById('stat-audit').textContent = data.audit_enabled ? '已开启' : '已关闭';
+
+        const connData = await fetchData('/api/connections');
+        const list = document.getElementById('connections-list');
+        if (connData.connections) {
+            list.innerHTML = connData.connections.map(c => {
+                const statusBadge = c.enabled !== false 
+                    ? '<span class="badge badge-ok" style="margin-left: 10px;"><i class="fas fa-check-circle"></i> 已启用</span>'
+                    : '<span class="badge badge-no" style="margin-left: 10px;"><i class="fas fa-ban"></i> 已禁用</span>';
+                
+                return `
+                <div class="conn-card" onclick="editConnection('${c.name}')" title="点击编辑连接配置" style="${c.enabled === false ? 'opacity: 0.6; border-color: #ccc;' : ''}">
+                    <h3><i class="fas fa-database"></i> ${c.name}${statusBadge}</h3>
+                    <p><strong>Host:</strong> ${c.host}:${c.port}</p>
+                    <p><strong>DB:</strong> ${c.database}</p>
+                    <p><strong>User:</strong> ${c.username}</p>
+                    <div class="permission-badges">
+                        ${renderBadge('INSERT', c.permissions.allow_insert)}
+                        ${renderBadge('UPDATE', c.permissions.allow_update)}
+                        ${renderBadge('DELETE', c.permissions.allow_delete)}
+                        ${renderBadge('CREATE', c.permissions.allow_create)}
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+    }
+
+    function renderBadge(name, allowed) {
+        return `<span class="badge ${allowed ? 'badge-ok' : 'badge-no'}">
+            <i class="fas fa-${allowed ? 'check' : 'times'}"></i> ${name}
+        </span>`;
+    }
+
+    async function updateConnSelects() {
+        const data = await fetchData('/api/connections');
+        if (data.connections) {
+            const options = data.connections.map(c => `<option value="${c.name}">${c.name} (${c.database})</option>`).join('');
+            const currentTablesVal = document.getElementById('tables-conn-select').value;
+            const currentQueryVal = document.getElementById('query-conn-select').value;
+            
+            document.getElementById('tables-conn-select').innerHTML = '<option value="">-- 请选择连接 --</option>' + options;
+            document.getElementById('query-conn-select').innerHTML = '<option value="">-- 请选择连接 --</option>' + options;
+            
+            if(currentTablesVal) document.getElementById('tables-conn-select').value = currentTablesVal;
+            if(currentQueryVal) document.getElementById('query-conn-select').value = currentQueryVal;
+        }
+    }
+
+    async function fetchTables() {
+        const conn = document.getElementById('tables-conn-select').value;
+        const display = document.getElementById('tables-display');
+        if (!conn) return;
+
+        display.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> 正在读取表列表...</div>';
+        const data = await fetchData(`/api/tables/${conn}`);
+        
+        if (data.success && data.tables) {
+            if (data.tables.length === 0) {
+                display.innerHTML = '<div class="loading">该数据库中没有找到任何表。</div>';
+            } else {
+                display.innerHTML = '<div class="table-grid">' + 
+                    data.tables.map(t => `
+                        <div class="table-card-wrapper">
+                            <div class="table-card-header">
+                                <i class="fas fa-table"></i> ${t}
+                            </div>
+                            <div class="table-card-actions">
+                                <button class="btn-table-action" onclick="viewSchema('${conn}', '${t}'); event.stopPropagation();">
+                                    <i class="fas fa-info-circle"></i> 查看结构
+                                </button>
+                                <button class="btn-table-action" onclick="viewTableData('${conn}', '${t}'); event.stopPropagation();">
+                                    <i class="fas fa-eye"></i> 查看数据
+                                </button>
+                            </div>
+                        </div>
+                    `).join('') +
+                    '</div>';
+            }
+        } else {
+            display.innerHTML = `<div class="loading" style="color:var(--danger-color)">加载失败: ${data.error}</div>`;
+        }
+    }
+
+    async function viewSchema(conn, table) {
+        const content = document.getElementById('modal-content');
+        content.innerHTML = `<h2><i class="fas fa-info-circle"></i> 表结构: ${table}</h2><div class="loading">正在加载...</div>`;
+        document.getElementById('modal').classList.add('active');
+
+        const data = await fetchData(`/api/table_schema/${conn}/${table}`);
+        if(data.success && data.schema) {
+            content.innerHTML = `
+                <h2 style="margin-bottom:20px;">表结构: ${table} (${conn})</h2>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr><th>字段</th><th>类型</th><th>Null</th><th>Key</th><th>Default</th><th>Extra</th></tr>
+                        </thead>
+                        <tbody>
+                            ${data.schema.map(s => `<tr>
+                                <td><strong>${s.Field}</strong></td>
+                                <td>${s.Type}</td>
+                                <td>${s.Null}</td>
+                                <td>${s.Key || '-'}</td>
+                                <td>${s.Default || '-'}</td>
+                                <td>${s.Extra || '-'}</td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        } else {
+            content.innerHTML = `<h2 style="color:var(--danger-color)">读取失败</h2><p>${data.error}</p>`;
+        }
+    }
+
+    async function viewTableData(conn, table) {
+        const content = document.getElementById('modal-content');
+        content.innerHTML = `<h2><i class="fas fa-eye"></i> 表数据: ${table}</h2><div class="loading">正在加载...</div>`;
+        document.getElementById('modal').classList.add('active');
+
+        const data = await fetchData(`/api/table_data/${conn}/${table}?limit=50`);
+        if(data.success && data.data) {
+            if(data.data.length === 0) {
+                content.innerHTML = `
+                    <h2 style="margin-bottom:20px;">表数据: ${table} (${conn})</h2>
+                    <div class="loading">该表暂无数据</div>
+                `;
+            } else {
+                content.innerHTML = `
+                    <h2 style="margin-bottom:20px;">表数据: ${table} (${conn})</h2>
+                    <p style="color: #666; margin-bottom: 15px;">显示前 ${data.count} 条记录</p>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>${data.columns.map(col => `<th>${col}</th>`).join('')}</tr>
+                            </thead>
+                            <tbody>
+                                ${data.data.map(row => `<tr>
+                                    ${data.columns.map(col => {
+                                        const value = row[col];
+                                        const displayValue = value === null ? '<span style="color:#999;font-style:italic;">NULL</span>' : value;
+                                        return `<td>${displayValue}</td>`;
+                                    }).join('')}
+                                </tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+        } else {
+            content.innerHTML = `<h2 style="color:var(--danger-color)">读取失败</h2><p>${data.error}</p>`;
+        }
+    }
+
+    async function runQuery() {
+        const conn = document.getElementById('query-conn-select').value;
+        const sql = document.getElementById('query-sql').value.trim();
+        const area = document.getElementById('query-result-area');
+
+        if(!sql) return alert('请输入 SQL 语句');
+        
+        area.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> 正在执行查询...</div>';
+        const data = await fetchData('/api/execute_query', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ connection: conn, sql: sql })
+        });
+
+        if (data.success) {
+            if (typeof data.result === 'string') {
+                area.innerHTML = `<h3>查询结果:</h3><pre class="log-sql" style="background:#f4f4f4; color:#333; border: 1px solid #ddd;">${data.result}</pre>`;
+            } else {
+                area.innerHTML = `<div style="padding:20px; background:#e6f4ea; border-radius:8px; color:#1e7e34;">
+                    <i class="fas fa-check-circle"></i> <strong>执行成功</strong><br>
+                    受影响行数: ${data.result.affected_rows || 0}<br>
+                    最后插入 ID: ${data.result.last_insert_id || '-'}
+                </div>`;
+            }
+        } else {
+            area.innerHTML = `<div style="padding:20px; background:#fce8e6; border-radius:8px; color:#d93025;">
+                <i class="fas fa-exclamation-triangle"></i> <strong>执行失败</strong><br>
+                ${data.error}
+            </div>`;
+        }
+    }
+
+    async function fetchAuditLogs() {
+        const limit = document.getElementById('audit-limit').value;
+        const list = document.getElementById('audit-list');
+        list.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</div>';
+
+        const data = await fetchData(`/api/audit_logs?limit=${limit}`);
+        if(data.success && data.logs) {
+            if(data.logs.length === 0) {
+                list.innerHTML = '<div class="loading">暂无记录</div>';
+            } else {
+                list.innerHTML = data.logs.map(l => `
+                    <div class="log-item">
+                        <div class="log-header">
+                            <span><i class="far fa-clock"></i> ${l.timestamp}</span>
+                            <span>用户: ${l.user_id} (${l.platform})</span>
+                            <span class="log-status ${l.success ? 'status-success' : 'status-failure'}">
+                                ${l.success ? 'SUCCESS' : 'FAILURE'}
+                            </span>
+                        </div>
+                        <div style="font-weight:600; font-size:14px; margin-top:5px;">
+                            ${l.operation} ${l.table_name ? 'on ' + l.table_name : ''} 
+                            <small style="color:#999; font-weight:normal;">(Time: ${l.execution_time}ms)</small>
+                        </div>
+                        <div class="log-sql">${l.sql_statement}</div>
+                        ${l.error ? `<div style="color:var(--danger-color); font-size:12px; margin-top:5px;"><strong>Error:</strong> ${l.error}</div>` : ''}
+                    </div>
+                `).join('');
+            }
+        } else {
+            list.innerHTML = '<div class="loading">加载审计日志失败</div>';
+        }
+    }
+
+    async function clearAuditLogs() {
+        if (!confirm('⚠️ 确定要清空所有审计日志吗？\n\n此操作不可恢复！所有历史操作记录都将被永久删除。')) {
+            return;
+        }
+        
+        try {
+            const data = await fetchData('/api/audit_logs/clear', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            });
+            
+            if (data.success) {
+                alert(`✅ ${data.message}`);
+                // 刷新日志列表
+                await fetchAuditLogs();
+            } else {
+                alert('清理失败: ' + data.error);
+            }
+        } catch (e) {
+            alert('清理失败: ' + e.message);
+        }
+    }
+
+    function closeModal() { document.getElementById('modal').classList.remove('active'); }
+
+    function closeEditModal() { document.getElementById('edit-modal').classList.remove('active'); }
+
+    let currentEditingConnection = null;
+
+    function createNewConnection() {
+        // 设置为新建模式
+        currentEditingConnection = null;
+        
+        // 清空表单
+        const nameInput = document.getElementById('conn-name');
+        nameInput.value = '';
+        nameInput.removeAttribute('readonly');
+        nameInput.style.background = '';
+        nameInput.style.cursor = '';
+        
+        // 隐藏提示文字
+        const nameHint = nameInput.parentElement.querySelector('small');
+        if (nameHint) nameHint.style.display = 'none';
+        
+        document.getElementById('conn-host').value = 'localhost';
+        document.getElementById('conn-port').value = '3306';
+        document.getElementById('conn-database').value = '';
+        document.getElementById('conn-username').value = 'root';
+        document.getElementById('conn-password').value = '';
+        document.getElementById('conn-charset').value = 'utf8mb4';
+        document.getElementById('conn-pool-size').value = '3';
+        document.getElementById('conn-max-query').value = '1000';
+        document.getElementById('conn-max-update').value = '100';
+        
+        // 默认权限
+        document.getElementById('perm-insert').checked = true;
+        document.getElementById('perm-update').checked = false;
+        document.getElementById('perm-delete').checked = false;
+        document.getElementById('perm-create').checked = false;
+        
+        // 隐藏删除和禁用按钮（新建时不需要）
+        document.getElementById('btn-delete').style.display = 'none';
+        document.getElementById('btn-disable').style.display = 'none';
+        
+        // 显示模态框
+        document.getElementById('edit-modal').classList.add('active');
+    }
+
+    async function deleteConnection() {
+        if (!currentEditingConnection) return;
+        
+        if (!confirm(`确定要删除连接 "${currentEditingConnection}" 吗？\n\n此操作不可恢复！`)) {
+            return;
+        }
+        
+        try {
+            const data = await fetchData(`/api/connections/${currentEditingConnection}`, {
+                method: 'DELETE'
+            });
+            
+            if (data.success) {
+                alert('✅ 连接已删除！\n\n' + data.message);
+                closeEditModal();
+                setTimeout(fetchOverview, 500);
+            } else {
+                alert('删除失败: ' + data.error);
+            }
+        } catch (e) {
+            alert('删除失败: ' + e.message);
+        }
+    }
+
+    async function disableConnection() {
+        if (!currentEditingConnection) return;
+        
+        if (!confirm(`确定要禁用连接 "${currentEditingConnection}" 吗？\n\n禁用后该连接将无法使用，但配置仍保留。`)) {
+            return;
+        }
+        
+        try {
+            const data = await fetchData(`/api/connections/${currentEditingConnection}/disable`, {
+                method: 'POST'
+            });
+            
+            if (data.success) {
+                alert('✅ 连接已禁用！\n\n' + data.message);
+                closeEditModal();
+                setTimeout(fetchOverview, 500);
+            } else {
+                alert('禁用失败: ' + data.error);
+            }
+        } catch (e) {
+            alert('禁用失败: ' + e.message);
+        }
+    }
+
+    async function enableConnection() {
+        if (!currentEditingConnection) return;
+        
+        if (!confirm(`确定要启用连接 "${currentEditingConnection}" 吗？`)) {
+            return;
+        }
+        
+        try {
+            const data = await fetchData(`/api/connections/${currentEditingConnection}/enable`, {
+                method: 'POST'
+            });
+            
+            if (data.success) {
+                alert('✅ 连接已启用！\n\n' + data.message);
+                closeEditModal();
+                setTimeout(fetchOverview, 500);
+            } else {
+                alert('启用失败: ' + data.error);
+            }
+        } catch (e) {
+            alert('启用失败: ' + e.message);
+        }
+    }
+
+    async function editConnection(connectionName) {
+        currentEditingConnection = connectionName;
+        const modal = document.getElementById('edit-modal');
+        
+        // 显示加载状态
+        modal.classList.add('active');
+        const form = document.getElementById('connection-form');
+        form.style.opacity = '0.5';
+        form.style.pointerEvents = 'none';
+        
+        try {
+            const data = await fetchData(`/api/connections/${connectionName}`);
+            if (data.success) {
+                const conn = data.connection;
+                
+                // 填充表单
+                const nameInput = document.getElementById('conn-name');
+                nameInput.value = conn.name;
+                nameInput.setAttribute('readonly', 'readonly');
+                nameInput.style.background = '#f0f0f0';
+                nameInput.style.cursor = 'not-allowed';
+                
+                // 显示提示文字
+                const nameHint = nameInput.parentElement.querySelector('small');
+                if (nameHint) nameHint.style.display = 'block';
+                
+                document.getElementById('conn-host').value = conn.host;
+                document.getElementById('conn-port').value = conn.port;
+                document.getElementById('conn-database').value = conn.database;
+                document.getElementById('conn-username').value = conn.username;
+                document.getElementById('conn-password').value = ''; // 密码字段留空
+                document.getElementById('conn-charset').value = conn.charset;
+                document.getElementById('conn-pool-size').value = conn.pool_size;
+                document.getElementById('conn-max-query').value = conn.max_query_rows;
+                document.getElementById('conn-max-update').value = conn.max_update_rows;
+                
+                // 设置权限勾选状态
+                document.getElementById('perm-insert').checked = conn.enable_insert;
+                document.getElementById('perm-update').checked = conn.enable_update;
+                document.getElementById('perm-delete').checked = conn.enable_delete;
+                document.getElementById('perm-create').checked = conn.enable_create_table;
+                
+                // 显示删除和禁用/启用按钮（编辑模式）
+                document.getElementById('btn-delete').style.display = 'inline-flex';
+                const disableBtn = document.getElementById('btn-disable');
+                if (conn.enabled === false) {
+                    // 已禁用，显示启用按钮
+                    disableBtn.innerHTML = '<i class="fas fa-check-circle"></i> 启用连接';
+                    disableBtn.className = 'btn btn-success';
+                    disableBtn.onclick = () => enableConnection();
+                } else {
+                    // 已启用，显示禁用按钮
+                    disableBtn.innerHTML = '<i class="fas fa-ban"></i> 禁用连接';
+                    disableBtn.className = 'btn btn-secondary';
+                    disableBtn.onclick = () => disableConnection();
+                }
+                disableBtn.style.display = 'inline-flex';
+                
+                // 加载表黑名单
+                await loadBlacklist(connectionName, conn.table_blacklist || []);
+                
+                // 恢复表单状态
+                form.style.opacity = '1';
+                form.style.pointerEvents = 'auto';
+            } else {
+                alert('加载连接信息失败: ' + data.error);
+                closeEditModal();
+            }
+        } catch (e) {
+            alert('加载连接信息失败: ' + e.message);
+            closeEditModal();
+        }
+    }
+
+    async function loadBlacklist(connectionName, currentBlacklist) {
+        const loadingDiv = document.getElementById('blacklist-loading');
+        const tablesDiv = document.getElementById('blacklist-tables');
+        const errorDiv = document.getElementById('blacklist-error');
+        
+        // 显示加载状态
+        loadingDiv.style.display = 'block';
+        tablesDiv.style.display = 'none';
+        errorDiv.style.display = 'none';
+        tablesDiv.innerHTML = '';
+        
+        try {
+            const data = await fetchData(`/api/connections/${connectionName}/tables`);
+            
+            if (data.success && data.tables && data.tables.length > 0) {
+                // 按字母排序
+                const tables = data.tables.sort();
+                
+                // 添加全选/取消全选按钮
+                const controlsDiv = document.createElement('div');
+                controlsDiv.style.marginBottom = '10px';
+                controlsDiv.innerHTML = `
+                    <button type="button" class="btn-secondary" onclick="toggleAllBlacklist(true)" 
+                            style="padding: 5px 10px; font-size: 12px; margin-right: 5px;">
+                        <i class="fas fa-check-square"></i> 全选
+                    </button>
+                    <button type="button" class="btn-secondary" onclick="toggleAllBlacklist(false)"
+                            style="padding: 5px 10px; font-size: 12px;">
+                        <i class="fas fa-square"></i> 取消全选
+                    </button>
+                    <span style="margin-left: 15px; color: #666; font-size: 12px;">
+                        共 ${tables.length} 个表
+                    </span>
+                `;
+                tablesDiv.appendChild(controlsDiv);
+                
+                // 创建表列表
+                const listDiv = document.createElement('div');
+                listDiv.style.maxHeight = '200px';
+                listDiv.style.overflowY = 'auto';
+                listDiv.style.border = '1px solid #ddd';
+                listDiv.style.borderRadius = '4px';
+                listDiv.style.padding = '10px';
+                listDiv.style.backgroundColor = '#fafafa';
+                
+                tables.forEach(tableName => {
+                    const isChecked = currentBlacklist.includes(tableName);
+                    const checkboxDiv = document.createElement('div');
+                    checkboxDiv.style.marginBottom = '8px';
+                    checkboxDiv.innerHTML = `
+                        <label style="display: flex; align-items: center; cursor: pointer; font-size: 14px; padding: 6px 8px; border-radius: 4px; transition: background 0.2s;" 
+                               onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background='transparent'">
+                            <input type="checkbox" class="blacklist-checkbox" value="${tableName}" 
+                                   ${isChecked ? 'checked' : ''}
+                                   style="margin: 0 10px 0 0; cursor: pointer; width: 16px; height: 16px; flex-shrink: 0;">
+                            <code style="background: #fff; padding: 4px 8px; border-radius: 3px; border: 1px solid #ddd; font-size: 13px; flex: 1;">
+                                ${tableName}
+                            </code>
+                        </label>
+                    `;
+                    listDiv.appendChild(checkboxDiv);
+                });
+                
+                tablesDiv.appendChild(listDiv);
+                loadingDiv.style.display = 'none';
+                tablesDiv.style.display = 'block';
+            } else if (data.success && data.tables && data.tables.length === 0) {
+                errorDiv.innerHTML = `
+                    <i class="fas fa-info-circle"></i> 该数据库暂无表
+                `;
+                loadingDiv.style.display = 'none';
+                errorDiv.style.display = 'block';
+            } else {
+                throw new Error(data.error || '获取表列表失败');
+            }
+        } catch (e) {
+            errorDiv.innerHTML = `
+                <i class="fas fa-exclamation-triangle"></i> 加载表列表失败: ${e.message}
+                <button type="button" class="btn-secondary" onclick="loadBlacklist('${connectionName}', [])"
+                        style="margin-left: 10px; padding: 4px 8px; font-size: 12px;">
+                    <i class="fas fa-redo"></i> 重试
+                </button>
+            `;
+            loadingDiv.style.display = 'none';
+            errorDiv.style.display = 'block';
+        }
+    }
+
+    function toggleAllBlacklist(checked) {
+        document.querySelectorAll('.blacklist-checkbox').forEach(checkbox => {
+            checkbox.checked = checked;
+        });
+    }
+
+    async function saveConnection() {
+        const isNewConnection = (currentEditingConnection === null);
+        const connectionName = document.getElementById('conn-name').value.trim();
+        
+        // 验证连接名称
+        if (!connectionName) {
+            alert('连接名称不能为空');
+            return;
+        }
+        
+        // 新建连接时必须提供密码
+        const password = document.getElementById('conn-password').value;
+        if (isNewConnection && password.trim() === '') {
+            alert('新建连接时必须提供密码！');
+            return;
+        }
+        
+        const saveBtn = document.querySelector('.btn-primary[onclick="saveConnection()"]');
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 保存中...';
+        saveBtn.disabled = true;
+        
+        try {
+            const formData = {
+                name: connectionName,
+                host: document.getElementById('conn-host').value,
+                port: parseInt(document.getElementById('conn-port').value),
+                database: document.getElementById('conn-database').value,
+                username: document.getElementById('conn-username').value,
+                charset: document.getElementById('conn-charset').value,
+                pool_size: parseInt(document.getElementById('conn-pool-size').value),
+                max_query_rows: parseInt(document.getElementById('conn-max-query').value),
+                max_update_rows: parseInt(document.getElementById('conn-max-update').value),
+                enable_insert: document.getElementById('perm-insert').checked,
+                enable_update: document.getElementById('perm-update').checked,
+                enable_delete: document.getElementById('perm-delete').checked,
+                enable_create_table: document.getElementById('perm-create').checked
+            };
+            
+            // 如果密码字段有值，则包含密码
+            if (password.trim() !== '') {
+                formData.password = password;
+            }
+            
+            // 收集表黑名单
+            const blacklistCheckboxes = document.querySelectorAll('.blacklist-checkbox:checked');
+            formData.table_blacklist = Array.from(blacklistCheckboxes).map(cb => cb.value);
+            
+            // 使用原始连接名或新连接名
+            const apiConnectionName = currentEditingConnection || connectionName;
+            
+            const data = await fetchData(`/api/connections/${apiConnectionName}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+            
+            if (data.success) {
+                alert(data.message);
+                closeEditModal();
+                setTimeout(fetchOverview, 500);
+            } else {
+                alert('保存失败: ' + data.error);
+            }
+        } catch (e) {
+            alert('保存失败: ' + e.message);
+        } finally {
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        }
+    }
+
+    window.onload = () => {
+        fetchOverview();
+    };
+</script>
+</body>
+</html>
