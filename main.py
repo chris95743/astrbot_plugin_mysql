@@ -419,9 +419,9 @@ class Main(Star):
         return result
 
     # ==================== 命令 ====================
-
-    @filter.permission_type(filter.PermissionType.ADMIN)
+    
     @filter.command_group("mysql")
+    @filter.permission_type(filter.PermissionType.ADMIN)
     def mysql_group(self):
         """MySQL管理命令组"""
         pass
@@ -545,3 +545,4 @@ class Main(Star):
 详细文档: https://github.com/Chris95743/astrbot_plugin_mysql
         """
         await event.send(help_text.strip())
+
