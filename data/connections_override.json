@@ -1,1 +1,20 @@
-
+[
+  {
+    "name": "default",
+    "host": "localhost",
+    "port": 3306,
+    "database": "database",
+    "username": "root",
+    "password": "password",
+    "charset": "utf8mb4",
+    "enable_insert": true,
+    "enable_update": true,
+    "enable_delete": false,
+    "enable_create_table": false,
+    "table_whitelist": [],
+    "table_blacklist": [],
+    "max_query_rows": 1000,
+    "max_update_rows": 100,
+    "pool_size": 3
+  }
+]
